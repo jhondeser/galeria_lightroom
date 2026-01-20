@@ -1,0 +1,82 @@
+[
+  {
+    "id": "1",
+    "file": "fotos/sample1.jpg",
+    "filename": "sample1.jpg",
+    "tags": ["nature", "sky", "clouds", "blue"],
+    "caption": "Beautiful sky with clouds",
+    "date": "2024-01-15"
+  },
+  {
+    "id": "2",
+    "file": "fotos/sample2.jpg",
+    "filename": "sample2.jpg",
+    "tags": ["nature", "forest", "green", "trees"],
+    "caption": "Dense forest path",
+    "date": "2024-01-16"
+  },
+  {
+    "id": "3",
+    "file": "fotos/cityscape_night.jpg",
+    "filename": "cityscape_night.jpg",
+    "tags": ["city", "night", "lights", "urban", "skyscrapers"],
+    "caption": "City skyline illuminated at night",
+    "date": "2024-01-17"
+  },
+  {
+    "id": "4",
+    "file": "fotos/beach_sunset.jpg",
+    "filename": "beach_sunset.jpg",
+    "tags": ["beach", "sunset", "ocean", "waves", "orange", "silhouette"],
+    "caption": "Golden sunset over a calm beach",
+    "date": "2024-01-18"
+  },
+  {
+    "id": "5",
+    "file": "fotos/mountain_summit.jpg",
+    "filename": "mountain_summit.jpg",
+    "tags": ["mountain", "snow", "peak", "adventure", "cold", "landscape"],
+    "caption": "Snow-capped mountain peak under clear sky",
+    "date": "2024-01-19"
+  },
+  {
+    "id": "6",
+    "file": "fotos/coffee_books.jpg",
+    "filename": "coffee_books.jpg",
+    "tags": ["coffee", "books", "interior", "relax", "wood", "morning"],
+    "caption": "A cozy corner with coffee and books",
+    "date": "2024-01-20"
+  },
+  {
+    "id": "7",
+    "file": "fotos/vintage_car.jpg",
+    "filename": "vintage_car.jpg",
+    "tags": ["car", "vintage", "classic", "retro", "vehicle", "old"],
+    "caption": "A restored vintage car on a country road",
+    "date": "2024-01-21"
+  },
+  {
+    "id": "8",
+    "file": "fotos/macro_flower.jpg",
+    "filename": "macro_flower.jpg",
+    "tags": ["macro", "flower", "red", "petals", "closeup", "nature"],
+    "caption": "Close-up of a red flower with water droplets",
+    "date": "2024-01-22"
+  },
+  {
+    "id": "9",
+    "file": "fotos/workspace_desk.jpg",
+    "filename": "workspace_desk.jpg",
+    "tags": ["workspace", "desk", "laptop", "minimal", "modern", "productivity"],
+    "caption": "Clean and modern home office setup",
+    "date": "2024-01-23"
+  },
+  {
+    "id": "10",
+    "file": "fotos/forest_stream.jpg",
+    "filename": "forest_stream.jpg",
+    "tags": ["forest", "stream", "water", "rocks", "green", "peaceful"],
+    "caption": "A small stream flowing through a dense forest",
+    "date": "2024-01-24"
+  }
+]
