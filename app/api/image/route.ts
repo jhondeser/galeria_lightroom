@@ -3,26 +3,24 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
-// Ahora los nombres son simples: img_001.jpg, img_002.jpg, etc.
-const IMAGES_FOLDER = 'G:\\Mi unidad\\respaldo pc\\jhonatan\\jhondeser_web\\libreria_lightroom';
+// Variable para guardar la ruta que el cliente ingrese
+let userImagePath: string | null = null;
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const filename = searchParams.get('filename'); // ej: "img_001.jpg"
+    const filename = searchParams.get('filename');
     
     if (!filename) {
       return NextResponse.json({ error: 'Se requiere nombre de archivo' }, { status: 400 });
     }
     
-    // 📌 Ruta directa - sin encoding complejo
-    const imagePath = path.join(IMAGES_FOLDER, filename);
+    // Usar la ruta del usuario o la ruta por defecto
+    const basePath = userImagePath || 'G:\\Mi unidad\\respaldo pc\\jhonatan\\jhondeser_web\\libreria_lightroom';
+    const imagePath = path.join(basePath, filename);
     
     if (!fs.existsSync(imagePath)) {
-      return NextResponse.json({ 
-        error: 'Imagen no encontrada',
-        path: imagePath 
-      }, { status: 404 });
+      return NextResponse.json({ error: 'Imagen no encontrada' }, { status: 404 });
     }
     
     const fileBuffer = fs.readFileSync(imagePath);
@@ -44,7 +42,17 @@ export async function GET(request: NextRequest) {
     });
     
   } catch (error) {
-    console.error('❌ Error en endpoint:', error);
     return NextResponse.json({ error: 'Error interno' }, { status: 500 });
+  }
+}
+
+// Endpoint para recibir la ruta del cliente
+export async function POST(request: NextRequest) {
+  try {
+    const { path } = await request.json();
+    userImagePath = path;
+    return NextResponse.json({ success: true, message: 'Ruta guardada' });
+  } catch (error) {
+    return NextResponse.json({ error: 'Error guardando ruta' }, { status: 500 });
   }
 }

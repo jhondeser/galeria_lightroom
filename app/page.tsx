@@ -1,8 +1,9 @@
-// app/page.tsx - VERSIÓN FINAL
+// app/page.tsx - CON PATHINPUT INTEGRADO
 'use client';
 
 import { useState, useEffect } from 'react';
 import Gallery from '@/components/Gallery';
+import PathInput from '@/components/PathInput';
 import { Photo } from '@/types/photo';
 import { getUniqueTags, getTagCounts } from '@/lib/data';
 import { Loader2, Filter, X, Search } from 'lucide-react';
@@ -15,35 +16,23 @@ export default function Home() {
   const [allTags, setAllTags] = useState<string[]>([]);
   const [tagCounts, setTagCounts] = useState<Record<string, number>>({});
   const [searchTerm, setSearchTerm] = useState('');
+  const [showPathInput, setShowPathInput] = useState(true); // Nuevo estado
 
-  // Cargar datos del JSON
-  // Cargar datos del JSON
-useEffect(() => {
+  // Función para cargar fotos
   const loadPhotos = async () => {
     setIsLoading(true);
     try {
       const response = await fetch('/photos.json');
       const data = await response.json();
       
-      // 📌 Extraer array de fotos de forma segura
       const photosArray = Array.isArray(data.photos) ? data.photos : 
                          Array.isArray(data) ? data : [];
       
-      // 📌 Debug: verificar lo que se cargó
       console.log(`✅ Cargadas ${photosArray.length} fotos`);
-      if (photosArray.length > 0) {
-        console.log('📸 Primera foto:', {
-          filename: photosArray[0].filename,
-          tagsCount: photosArray[0].tags?.length || 0,
-          tags: photosArray[0].tags
-        });
-      }
       
-      // 📌 Actualizar estados
       setPhotos(photosArray);
       setFilteredPhotos(photosArray);
       
-      // 📌 Procesar tags (IMPORTANTE: usar photosArray, no data)
       const uniqueTags = getUniqueTags(photosArray);
       const tagCounts = getTagCounts(photosArray);
       
@@ -54,7 +43,6 @@ useEffect(() => {
       
     } catch (error) {
       console.error('Error loading photos:', error);
-      // Opcional: establecer estados vacíos en caso de error
       setPhotos([]);
       setFilteredPhotos([]);
       setAllTags([]);
@@ -64,8 +52,16 @@ useEffect(() => {
     }
   };
 
-  loadPhotos();
-}, []);
+  // Cargar fotos al iniciar
+  useEffect(() => {
+    loadPhotos();
+  }, []);
+
+  // Cuando se configure la ruta, recargar fotos
+  const handlePathSet = () => {
+    setShowPathInput(false);
+    loadPhotos(); // Recargar con las nuevas fotos
+  };
 
   // Aplicar filtros cuando cambian
   useEffect(() => {
@@ -104,7 +100,24 @@ useEffect(() => {
     .map(([tag]) => tag);
 
   return (
-    <main className="min-h-screen p-4 md:p-8 bg-gradient-to-br from-gray-50 to-gray-100">      
+    <main className="min-h-screen p-4 md:p-8 bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* PathInput - Solo se muestra cuando no hay fotos o cuando se activa */}
+      <div className="w-full ">
+        <PathInput onPathSet={handlePathSet} />
+      </div>
+
+      {/* Botón para cambiar ruta (siempre visible) */}
+      {!showPathInput && (
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={() => setShowPathInput(true)}
+            className="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+          >
+            Cambiar ruta de imágenes
+          </button>
+        </div>
+      )}
+      
       {isLoading ? (
         <div className="flex flex-col items-center justify-center min-h-[60vh]">
           <Loader2 className="w-8 h-8 text-blue-500 animate-spin mb-4" />
