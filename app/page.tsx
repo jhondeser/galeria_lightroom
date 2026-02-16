@@ -17,29 +17,55 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Cargar datos del JSON
-  useEffect(() => {
-    const loadPhotos = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch('/photos.json');
-        const data = await response.json();
-        
-        // Usar datos tal cual están
-        setPhotos(data);
-        setFilteredPhotos(data);
-        
-        const uniqueTags = getUniqueTags(data);
-        setAllTags(uniqueTags);
-        setTagCounts(getTagCounts(data));
-      } catch (error) {
-        console.error('Error loading photos:', error);
-      } finally {
-        setIsLoading(false);
+  // Cargar datos del JSON
+useEffect(() => {
+  const loadPhotos = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/photos.json');
+      const data = await response.json();
+      
+      // 📌 Extraer array de fotos de forma segura
+      const photosArray = Array.isArray(data.photos) ? data.photos : 
+                         Array.isArray(data) ? data : [];
+      
+      // 📌 Debug: verificar lo que se cargó
+      console.log(`✅ Cargadas ${photosArray.length} fotos`);
+      if (photosArray.length > 0) {
+        console.log('📸 Primera foto:', {
+          filename: photosArray[0].filename,
+          tagsCount: photosArray[0].tags?.length || 0,
+          tags: photosArray[0].tags
+        });
       }
-    };
+      
+      // 📌 Actualizar estados
+      setPhotos(photosArray);
+      setFilteredPhotos(photosArray);
+      
+      // 📌 Procesar tags (IMPORTANTE: usar photosArray, no data)
+      const uniqueTags = getUniqueTags(photosArray);
+      const tagCounts = getTagCounts(photosArray);
+      
+      setAllTags(uniqueTags);
+      setTagCounts(tagCounts);
+      
+      console.log(`🏷️  Encontrados ${uniqueTags.length} tags únicos`);
+      
+    } catch (error) {
+      console.error('Error loading photos:', error);
+      // Opcional: establecer estados vacíos en caso de error
+      setPhotos([]);
+      setFilteredPhotos([]);
+      setAllTags([]);
+      setTagCounts({});
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    loadPhotos();
-  }, []);
+  loadPhotos();
+}, []);
 
   // Aplicar filtros cuando cambian
   useEffect(() => {
@@ -78,31 +104,7 @@ export default function Home() {
     .map(([tag]) => tag);
 
   return (
-    <main className="min-h-screen p-4 md:p-8 bg-gradient-to-br from-gray-50 to-gray-100">
-      <header className="mb-8 md:mb-12">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-800">
-              Galería Lightroom
-            </h1>
-            <p className="text-gray-600 mt-2 max-w-2xl">
-              Visualiza y filtra tus fotos por keywords exportados desde Adobe Lightroom.
-              Selecciona múltiples tags para filtrar (usando lógica AND).
-            </p>
-          </div>
-          
-          {selectedTags.length > 0 && (
-            <button
-              onClick={handleClearFilters}
-              className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors self-start md:self-center"
-            >
-              <X className="w-4 h-4" />
-              Limpiar filtros ({selectedTags.length})
-            </button>
-          )}
-        </div>
-      </header>
-      
+    <main className="min-h-screen p-4 md:p-8 bg-gradient-to-br from-gray-50 to-gray-100">      
       {isLoading ? (
         <div className="flex flex-col items-center justify-center min-h-[60vh]">
           <Loader2 className="w-8 h-8 text-blue-500 animate-spin mb-4" />
@@ -112,7 +114,7 @@ export default function Home() {
         <div className="flex flex-col lg:flex-row gap-6 md:gap-8">
           {/* Panel de filtros - izquierda */}
           <aside className="lg:w-1/4">
-            <div className="bg-white rounded-xl shadow-lg p-6 sticky top-6">
+            <div className="bg-white shadow-lg p-6 sticky top-6">
               {/* Header */}
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
@@ -258,45 +260,41 @@ export default function Home() {
           
           {/* Galería - derecha */}
           <section className="lg:w-3/4">
-            <div className="bg-white rounded-xl shadow-lg p-4 md:p-6">
-              {/* Header de la galería */}
-              <div className="mb-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+            <div className="bg-white shadow-xl p-4 md:p-6">
+              {/* Header simplificado */}
+              <div className="mb-8">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                   <div>
-                    <h2 className="text-xl font-semibold text-gray-800">
-                      Galería de fotos
-                    </h2>
                     {selectedTags.length > 0 && (
                       <p className="text-sm text-gray-600 mt-1">
-                        Filtrado por: {selectedTags.join(', ')}
+                        Filtrado por: <span className="font-medium">{selectedTags.join(', ')}</span>
                       </p>
                     )}
                   </div>
-                  <div className="text-sm text-gray-600 bg-gray-50 px-4 py-2 rounded-lg">
-                    <span className="font-medium">{filteredPhotos.length}</span> de{' '}
-                    <span className="font-medium">{photos.length}</span> imágenes
-                    {selectedTags.length > 0 && (
-                      <span className="ml-2 text-blue-600">
-                        • {selectedTags.length} tag{selectedTags.length !== 1 ? 's' : ''} seleccionado{selectedTags.length !== 1 ? 's' : ''}
-                      </span>
-                    )}
+                  
+                  {/* Contador elegante */}
+                  <div className="flex items-center gap-4">
+                    <div className="text-sm text-gray-600 px-4 py-2 bg-gray-50 rounded-lg">
+                      <span className="font-bold text-gray-800">{filteredPhotos.length}</span>
+                      <span className="text-gray-500"> de {photos.length} imágenes</span>
+                    </div>
                   </div>
                 </div>
                 
-                {/* Tags activos para rápido acceso */}
+                {/* Tags activos como chips flotantes */}
                 {selectedTags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-4">
+                  <div className="flex flex-wrap gap-2 mb-6">
                     {selectedTags.map(tag => (
                       <span
                         key={tag}
-                        className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full text-sm font-medium shadow-sm"
                       >
                         {tag}
                         <button
                           onClick={() => handleTagToggle(tag)}
-                          className="hover:text-blue-900"
+                          className="hover:text-blue-100 transition-colors"
                         >
-                          <X className="w-3 h-3" />
+                          <X className="w-4 h-4" />
                         </button>
                       </span>
                     ))}
@@ -306,52 +304,33 @@ export default function Home() {
               
               {/* Galería de imágenes */}
               <Gallery photos={filteredPhotos} />
-            </div>
-            
-            {/* Estadísticas */}
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-white border border-gray-200 rounded-lg p-4">
-                <h3 className="font-medium text-gray-700 mb-2">📊 Estadísticas</h3>
-                <div className="text-sm text-gray-600 space-y-1">
-                  <p>• {photos.length} fotos totales</p>
-                  <p>• {allTags.length} tags únicos</p>
-                  <p>• {Object.values(tagCounts).reduce((a, b) => a + b, 0)} tags asignados</p>
+              
+              {/* Estadísticas minimalistas */}
+              {filteredPhotos.length > 0 && (
+                <div className="mt-10 pt-6 border-t border-gray-100">
+                  <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="text-sm text-gray-600">
+                      <span className="font-medium text-gray-800">{allTags.length}</span> tags únicos • 
+                      <span className="font-medium text-gray-800 ml-2">
+                        {Object.values(tagCounts).reduce((a, b) => a + b, 0)}
+                      </span> asignaciones totales
+                    </div>
+                    
+                    <div className="text-xs text-gray-500 flex items-center gap-2">
+                      <span className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                        Filtro AND activo
+                      </span>
+                      <span className="text-gray-300">•</span>
+                      <span>Selecciona múltiples tags</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
-                <h3 className="font-medium text-blue-800 mb-2">ℹ️ Cómo filtrar</h3>
-                <ul className="text-sm text-blue-700 space-y-1">
-                  <li>• Selecciona múltiples tags (AND)</li>
-                  <li>• Usa el buscador para tags</li>
-                  <li>• Los números muestran cuántas fotos tienen ese tag</li>
-                </ul>
-              </div>
-              
-              <div className="bg-green-50 border border-green-100 rounded-lg p-4">
-                <h3 className="font-medium text-green-800 mb-2">🚀 Próximamente</h3>
-                <ul className="text-sm text-green-700 space-y-1">
-                  <li>• Script Python para procesar fotos reales</li>
-                  <li>• Despliegue en Vercel</li>
-                  <li>• Integración con Google Drive</li>
-                </ul>
-              </div>
+              )}
             </div>
           </section>
         </div>
       )}
-      
-      {/* Footer */}
-      <footer className="mt-12 pt-6 border-t border-gray-200">
-        <div className="text-center text-sm text-gray-500">
-          <p>
-            Galería desarrollada con Next.js 14 • Filtrado por metadatos de Lightroom
-          </p>
-          <p className="mt-1">
-            Datos de ejemplo: 10 fotos con keywords de Lightroom
-          </p>
-        </div>
-      </footer>
     </main>
   );
 }

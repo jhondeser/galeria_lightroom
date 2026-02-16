@@ -1,71 +1,83 @@
 // components/ImageCard.tsx
 import Image from 'next/image';
 import { Photo } from '@/types/photo';
-import { Tag } from 'lucide-react';
+import { useState } from 'react';
+import { Maximize2 } from 'lucide-react';
 
 interface ImageCardProps {
   photo: Photo;
+  priority?: boolean;
+  onClick?: () => void;
 }
 
-export default function ImageCard({ photo }: ImageCardProps) {
+export default function ImageCard({ photo, priority = false, onClick }: ImageCardProps) {
+  const imageSrc = `/api/image?filename=${photo.filename}`;
+  const [imageError, setImageError] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+
+  const getAspectRatio = () => {
+    if (photo.width && photo.height) {
+      return photo.width / photo.height;
+    }
+    const ratios = [3/4, 1, 4/3, 16/9];
+    const hash = photo.id ? parseInt(photo.id.toString().slice(-1)) : 0;
+    return ratios[hash % ratios.length];
+  };
+
+  const aspectRatio = getAspectRatio();
+
   return (
-    <div className="group relative overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-all duration-300 bg-white">
-      {/* Contenedor de imagen */}
-      <div className="relative aspect-square overflow-hidden">
-        <Image
-          src={`/${photo.file}`}
-          alt={photo.caption || photo.filename}
-          fill
-          className="object-cover group-hover:scale-105 transition-transform duration-500"
-          sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
-        />
-        
-        {/* Overlay hover */}
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300" />
+    <div 
+      className="group relative overflow-hidden transition-all duration-300 cursor-pointer hover:shadow-2xl hover:-translate-y-1"
+      onClick={onClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
+    >
+      {/* Botón de expandir visible en hover */}
+      {isHovered && (
+        <div className="absolute top-3 right-3 z-10 p-2 bg-black/50 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <Maximize2 className="w-4 h-4 text-white" />
+        </div>
+      )}
+
+      <div className={`relative overflow-hidden ${aspectRatio < 0.8 ? 'h-full' : ''}`}>
+        {imageError ? (
+          <div className="w-full h-48 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+            <span className="text-gray-400">Imagen no disponible</span>
+          </div>
+        ) : (
+          <Image
+            src={imageSrc}
+            alt={photo.caption || `Imagen ${photo.id}`}
+            width={aspectRatio > 1.2 ? 800 : 400}
+            height={aspectRatio < 0.8 ? 600 : 400}
+            className={`
+              w-full h-auto object-cover transition-transform duration-700
+              ${aspectRatio < 0.8 ? 'min-h-[300px] max-h-[600px]' : ''}
+              group-hover:scale-[1.03]
+            `}
+            sizes={`
+              (max-width: 640px) 100vw,
+              (max-width: 768px) ${aspectRatio > 1.2 ? '100vw' : '50vw'},
+              (max-width: 1024px) ${aspectRatio > 1.2 ? '50vw' : '33vw'},
+              ${aspectRatio > 1.2 ? '40vw' : '20vw'}
+            `}
+            unoptimized={true}
+            priority={priority}
+            quality={90}
+            onError={() => setImageError(true)}
+          />
+        )}
       </div>
       
-      {/* Información de la imagen */}
-      <div className="p-4">
-        <div className="flex items-start justify-between mb-2">
-          <h3 className="font-medium text-gray-800 truncate">
-            {photo.filename}
-          </h3>
-          {photo.date && (
-            <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
-              {photo.date}
-            </span>
-          )}
-        </div>
-        
-        {/* Tags */}
-        {photo.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-2">
-            <Tag className="w-3 h-3 text-gray-400 mt-1" />
-            <div className="flex flex-wrap gap-1 ml-1">
-              {photo.tags.slice(0, 3).map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-block px-2 py-1 text-xs bg-blue-50 text-blue-600 rounded-full"
-                >
-                  {tag}
-                </span>
-              ))}
-              {photo.tags.length > 3 && (
-                <span className="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-500 rounded-full">
-                  +{photo.tags.length - 3}
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-        
-        {/* Caption */}
-        {photo.caption && (
-          <p className="text-sm text-gray-600 mt-2 line-clamp-2">
-            {photo.caption}
-          </p>
-        )}
-      </div>
     </div>
   );
 }
