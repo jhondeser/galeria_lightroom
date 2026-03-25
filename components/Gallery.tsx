@@ -1,11 +1,10 @@
-// components/Gallery.tsx
 'use client';
 
 import { Photo } from '@/types/photo';
 import ImageCard from './ImageCard';
 import ImageModal from './ImageModal';
 import { ImageOff } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 
 interface GalleryProps {
   photos: Photo[];
@@ -14,72 +13,28 @@ interface GalleryProps {
 export default function Gallery({ photos }: GalleryProps) {
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [containerWidth, setContainerWidth] = useState(0);
-  const [rows, setRows] = useState<Photo[][]>([]);
-  const targetRowHeight = 250;
 
-  // Efecto para manejar el ancho del contenedor
   useEffect(() => {
-    if (!containerRef.current || photos.length === 0) return;
+    if (!isModalOpen) return;
 
-    const updateWidth = () => {
-      if (containerRef.current) {
-        setContainerWidth(containerRef.current.offsetWidth);
-      }
-    };
-
-    updateWidth();
-    window.addEventListener('resize', updateWidth);
-    return () => window.removeEventListener('resize', updateWidth);
-  }, [photos.length]);
-
-  // Algoritmo para empaquetar imágenes en filas fluidas
-  useEffect(() => {
-    if (containerWidth === 0 || photos.length === 0) return;
-
-    const newRows: Photo[][] = [];
-    let currentRow: Photo[] = [];
-    let currentRowWidth = 0;
-
-    photos.forEach(photo => {
-      const aspectRatio = photo.width && photo.height 
-        ? photo.width / photo.height 
-        : 1;
-      
-      const imgHeight = targetRowHeight;
-      const imgWidth = imgHeight * aspectRatio;
-
-      if (currentRowWidth + imgWidth <= containerWidth || currentRow.length === 0) {
-        currentRow.push(photo);
-        currentRowWidth += imgWidth;
-      } else {
-        newRows.push(currentRow);
-        currentRow = [photo];
-        currentRowWidth = imgWidth;
-      }
-    });
-
-    if (currentRow.length > 0) {
-      newRows.push(currentRow);
-    }
-
-    setRows(newRows);
-  }, [photos, containerWidth, targetRowHeight]);
-
-  // Manejar navegación con teclado en el modal
-  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!isModalOpen) return;
-
-      if (e.key === 'Escape') {
-        handleCloseModal();
-      }
+      if (e.key === 'Escape') handleCloseModal();
+      if (e.key === 'ArrowRight') handleNextPhoto();
+      if (e.key === 'ArrowLeft') handlePrevPhoto();
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isModalOpen]);
+  }, [isModalOpen, photos.length]);
+
+  useEffect(() => {
+    if (selectedPhotoIndex === null) return;
+
+    if (selectedPhotoIndex >= photos.length) {
+      setSelectedPhotoIndex(null);
+      setIsModalOpen(false);
+    }
+  }, [photos, selectedPhotoIndex]);
 
   const handleOpenModal = (index: number) => {
     setSelectedPhotoIndex(index);
@@ -88,19 +43,21 @@ export default function Gallery({ photos }: GalleryProps) {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setTimeout(() => setSelectedPhotoIndex(null), 300); // Esperar a que se cierre la animación
+    setSelectedPhotoIndex(null);
   };
 
   const handleNextPhoto = () => {
-    if (selectedPhotoIndex !== null && selectedPhotoIndex < photos.length - 1) {
-      setSelectedPhotoIndex(selectedPhotoIndex + 1);
-    }
+    setSelectedPhotoIndex((prev) => {
+      if (prev === null) return prev;
+      return prev < photos.length - 1 ? prev + 1 : prev;
+    });
   };
 
   const handlePrevPhoto = () => {
-    if (selectedPhotoIndex !== null && selectedPhotoIndex > 0) {
-      setSelectedPhotoIndex(selectedPhotoIndex - 1);
-    }
+    setSelectedPhotoIndex((prev) => {
+      if (prev === null) return prev;
+      return prev > 0 ? prev - 1 : prev;
+    });
   };
 
   if (photos.length === 0) {
@@ -117,52 +74,26 @@ export default function Gallery({ photos }: GalleryProps) {
     );
   }
 
-  const selectedPhoto = selectedPhotoIndex !== null ? photos[selectedPhotoIndex] : null;
+  const selectedPhoto =
+    selectedPhotoIndex !== null ? photos[selectedPhotoIndex] : null;
 
   return (
     <>
-      <div ref={containerRef} className="w-full">
-        {rows.map((row, rowIndex) => (
-          <div 
-            key={rowIndex} 
-            className="flex gap-y-4 mb-4 overflow-hidden"
-            style={{ height: `${targetRowHeight}px` }}
+      <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4">
+        {photos.map((photo, index) => (
+          <div
+            key={photo.id ?? photo.filename ?? index}
+            className="mb-4 break-inside-avoid"
           >
-            {row.map((photo, photoIndex) => {
-              let globalIndex = 0;
-              for (let i = 0; i < rowIndex; i++) {
-                globalIndex += rows[i].length;
-              }
-              globalIndex += photoIndex;
-              
-              const aspectRatio = photo.width && photo.height 
-                ? photo.width / photo.height 
-                : 1;
-              
-              return (
-                <div
-                  key={`${rowIndex}-${photoIndex}`}
-                  className="flex-1 min-w-0 relative overflow-hidden hover:shadow-xl transition-shadow"
-                  style={{ 
-                    flex: aspectRatio,
-                    maxWidth: `${aspectRatio * 100}%`
-                  }}
-                >
-                  <div className="relative w-full h-full">
-                    <ImageCard 
-                      photo={photo} 
-                      priority={rowIndex === 0 && photoIndex < 3}
-                      onClick={() => handleOpenModal(globalIndex)}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+            <ImageCard
+              photo={photo}
+              priority={index < 3}
+              onClick={() => handleOpenModal(index)}
+            />
           </div>
         ))}
       </div>
 
-      {/* Modal */}
       <ImageModal
         photo={selectedPhoto}
         isOpen={isModalOpen}

@@ -60,7 +60,7 @@ export default function PathInput({ onPathSet }: PathInputProps) {
   };
 
   return (
-    <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg">
+    <div className="bg-gradient-to-r from-gray-250 to-gray-200">
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           {/* Título y descripción */}
@@ -86,7 +86,7 @@ export default function PathInput({ onPathSet }: PathInputProps) {
                   value={path}
                   onChange={(e) => setPath(e.target.value)}
                   placeholder="G:\Mi unidad\Fotos o /home/usuario/imagenes"
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-white/50 focus:bg-white/20 transition-all"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-black placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-white/50 focus:bg-white/20 transition-all"
                   disabled={loading}
                 />
                 {status === 'success' && (

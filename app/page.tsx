@@ -16,7 +16,8 @@ export default function Home() {
   const [allTags, setAllTags] = useState<string[]>([]);
   const [tagCounts, setTagCounts] = useState<Record<string, number>>({});
   const [searchTerm, setSearchTerm] = useState('');
-  const [showPathInput, setShowPathInput] = useState(true); // Nuevo estado
+  const [showPathInput, setShowPathInput] = useState(true);
+  const [showFilters, setShowFilters] = useState(true);
 
   // Función para cargar fotos
   const loadPhotos = async () => {
@@ -118,6 +119,7 @@ export default function Home() {
         </div>
       )}
       
+      
       {isLoading ? (
         <div className="flex flex-col items-center justify-center min-h-[60vh]">
           <Loader2 className="w-8 h-8 text-blue-500 animate-spin mb-4" />
@@ -125,154 +127,196 @@ export default function Home() {
         </div>
       ) : (
         <div className="flex flex-col lg:flex-row gap-6 md:gap-8">
+          
           {/* Panel de filtros - izquierda */}
-          <aside className="lg:w-1/4">
-            <div className="bg-white shadow-lg p-6 sticky top-6">
-              {/* Header */}
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-2">
-                  <Filter className="w-5 h-5 text-blue-500" />
-                  <h2 className="text-xl font-semibold text-gray-800">Filtros</h2>
-                </div>
-                <span className="text-sm bg-blue-100 text-blue-600 px-3 py-1 rounded-full">
-                  {photos.length} fotos
-                </span>
-              </div>
-
-              {/* Búsqueda */}
-              <div className="mb-6">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Buscar tags..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                  />
-                  <div className="absolute left-3 top-2.5">
-                    <Search className="w-4 h-4 text-gray-400" />
+          {showFilters && (
+            <aside className="lg:w-1/4">
+              <div className="bg-white shadow-lg p-6 sticky top-6 max-h-[calc(100vh-50px)] overflow-y-auto">
+                
+                {/* Header */}
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-2">
+                    <Filter className="w-5 h-5 text-blue-500" />
+                    <h2 className="text-xl font-semibold text-gray-800">Filtros</h2>
                   </div>
-                  {searchTerm && (
-                    <button
-                      onClick={() => setSearchTerm('')}
-                      className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
+                  <span className="text-sm bg-blue-100 text-blue-600 px-3 py-1 rounded-full">
+                    {photos.length} fotos
+                  </span>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  {filteredTags.length} de {allTags.length} tags
-                </p>
-              </div>
 
-              {/* Tags populares */}
-              {popularTags.length > 0 && (
+                {/* Búsqueda */}
                 <div className="mb-6">
-                  <h3 className="text-sm font-medium text-gray-700 mb-3">
-                    Tags populares
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {popularTags.map(tag => {
-                      const isSelected = selectedTags.includes(tag);
-                      return (
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Buscar tags..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    />
+                    <div className="absolute left-3 top-2.5">
+                      <Search className="w-4 h-4 text-gray-400" />
+                    </div>
+                    {searchTerm && (
+                      <button
+                        onClick={() => setSearchTerm('')}
+                        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    {filteredTags.length} de {allTags.length} tags
+                  </p>
+                </div>
+
+                {/* Tags populares */}
+                {popularTags.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-sm font-medium text-gray-700 mb-3">
+                      Tags populares
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {popularTags.map(tag => {
+                        const isSelected = selectedTags.includes(tag);
+                        return (
+                          <button
+                            key={tag}
+                            onClick={() => handleTagToggle(tag)}
+                            className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
+                              isSelected
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                          >
+                            {tag} ({tagCounts[tag]})
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tags seleccionados */}
+                {selectedTags.length > 0 && (
+                  <div className="mb-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-medium text-gray-700">
+                        Seleccionados ({selectedTags.length})
+                      </h3>
+                      <button
+                        onClick={handleClearFilters}
+                        className="text-xs text-red-500 hover:text-red-700 font-medium"
+                      >
+                        Limpiar todo
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedTags.map(tag => (
                         <button
                           key={tag}
                           onClick={() => handleTagToggle(tag)}
-                          className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
-                            isSelected
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          }`}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-full text-sm hover:bg-blue-200 transition-colors"
                         >
-                          {tag} ({tagCounts[tag]})
+                          {tag}
+                          <X className="w-3 h-3" />
                         </button>
-                      );
-                    })}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Tags seleccionados */}
-              {selectedTags.length > 0 && (
-                <div className="mb-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-medium text-gray-700">
-                      Seleccionados ({selectedTags.length})
-                    </h3>
-                    <button
-                      onClick={handleClearFilters}
-                      className="text-xs text-red-500 hover:text-red-700 font-medium"
-                    >
-                      Limpiar todo
-                    </button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedTags.map(tag => (
-                      <button
-                        key={tag}
-                        onClick={() => handleTagToggle(tag)}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-full text-sm hover:bg-blue-200 transition-colors"
-                      >
-                        {tag}
-                        <X className="w-3 h-3" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Lista de todos los tags */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium text-gray-700">
-                  Todos los tags ({allTags.length})
-                </h3>
-                <div className="max-h-[400px] overflow-y-auto pr-2 space-y-2">
-                  {filteredTags.length === 0 ? (
-                    <p className="text-gray-500 text-sm text-center py-4">
-                      No se encontraron tags
-                    </p>
-                  ) : (
-                    filteredTags.map(tag => {
-                      const isSelected = selectedTags.includes(tag);
-                      return (
-                        <div
-                          key={tag}
-                          className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
-                          onClick={() => handleTagToggle(tag)}
-                        >
-                          <div className="flex items-center">
-                            <div className={`w-3 h-3 rounded mr-3 ${
-                              isSelected ? 'bg-blue-500' : 'bg-gray-200'
-                            }`} />
-                            <span className={`${isSelected ? 'font-medium text-blue-700' : 'text-gray-700'}`}>
-                              {tag}
+                {/* Lista de todos los tags */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-medium text-gray-700">
+                    Todos los tags ({allTags.length})
+                  </h3>
+                  <div className="max-h-[400px] overflow-y-auto pr-2 space-y-2">
+                    {filteredTags.length === 0 ? (
+                      <p className="text-gray-500 text-sm text-center py-4">
+                        No se encontraron tags
+                      </p>
+                    ) : (
+                      filteredTags.map(tag => {
+                        const isSelected = selectedTags.includes(tag);
+                        return (
+                          <div
+                            key={tag}
+                            onClick={() => handleTagToggle(tag)}
+                            className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
+                          >
+                            <div className="flex items-center">
+                              <div
+                                className={`w-3 h-3 rounded mr-3 ${
+                                  isSelected ? 'bg-blue-500' : 'bg-gray-200'
+                                }`}
+                              />
+                              <span
+                                className={`${
+                                  isSelected
+                                    ? 'font-medium text-blue-700'
+                                    : 'text-gray-700'
+                                }`}
+                              >
+                                {tag}
+                              </span>
+                            </div>
+                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                              {tagCounts[tag] || 0}
                             </span>
                           </div>
-                          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                            {tagCounts[tag] || 0}
-                          </span>
-                        </div>
-                      );
-                    })
-                  )}
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              {/* Info */}
-              <div className="mt-8 pt-6 border-t border-gray-200">
-                <p className="text-xs text-gray-500">
-                  📌 <span className="font-medium">Filtro AND:</span> Las fotos deben tener TODOS los tags seleccionados.
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  👆 Haz clic en cualquier tag para seleccionarlo.
-                </p>
+                {/* Info */}
+                <div className="mt-8 pt-6 border-t border-gray-200">
+                  <p className="text-xs text-gray-500">
+                    📌 <span className="font-medium">Filtro AND:</span> Las fotos deben tener TODOS los tags seleccionados.
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    👆 Haz clic en cualquier tag para seleccionarlo.
+                  </p>
+                </div>
+
               </div>
-            </div>
-          </aside>
+            </aside>
+          )}
+
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`
+              fixed
+              top-1/2
+              -translate-y-1/2
+              left-0
+              h-[100px]
+              px-2
+              bg-gray-500
+              text-white
+              text-xs
+              shadow
+              hover:bg-blue-600
+              transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
+              ease-in-out
+              z-[100]
+            `}
+          >
+            {showFilters ? '←' : '→'}
+          </button>
           
           {/* Galería - derecha */}
-          <section className="lg:w-3/4">
+          <section
+            className={`
+              transition-all
+              duration-500
+              ease-in-out
+              ${showFilters ? 'lg:w-3/4' : 'lg:w-full w-full'}
+            `}
+          >
             <div className="bg-white shadow-xl p-4 md:p-6">
               {/* Header simplificado */}
               <div className="mb-8">
@@ -300,7 +344,7 @@ export default function Home() {
                     {selectedTags.map(tag => (
                       <span
                         key={tag}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full text-sm font-medium shadow-sm"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-black rounded-full text-sm font-medium shadow-sm"
                       >
                         {tag}
                         <button
